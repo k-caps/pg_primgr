@@ -23,7 +23,7 @@ Installation
 ------------
 You can use the RPMs from the releases page, or adapt and run any of the methods provided in the `install_scripts` directory, or manually.
 
-## RPM installation
+### RPM installation
 Download the RPM files you want to use and install them on the relevant machines - `primgr.rpm` and `primgr-pg-enable.rpm` should be installed on all Postgres nodes, and `primgr-haproxy.rpm` on all haproxy node.
 
 `primgr.rpm` installs only the core API on the assumption that you know how you want to use it.  
@@ -31,13 +31,13 @@ Download the RPM files you want to use and install them on the relevant machines
 `primgr-haproxy.rpm` configures an `haproxy.cfg` to automatically send new connections to the actual primary only. You will need to add your own hostnames to `haproxy.cfg` after it has been installed.  
 
 
-## Script installation
+### Script installation
 If you require more fine-tuning than the RPMs provide, you can use the provided bash installation scripts as a reference or attempt to use them as-is. They do exactly the same as the RPMs, however you control all aspects instead of trusting the RPM.
 
 If you prefer Ansible for your deployment, you can use the provided playbooks and role, which also configures haproxy. You will need to populate your own inventory. 
 See the ansible playbook file `install_scripts/ansible/playbooks/playbook_to_deploy_to_existing.yml` to get started
 
-## Manual installation
+### Manual installation
 If you choose a manual install, you will need to deploy the files in the `src` directory manually, in whatever directory structure you like.    
 You will have to put the haproxy configuration in your haproxy.cfg, or simply use it as a reference for the load balancer of your choice.  
 
