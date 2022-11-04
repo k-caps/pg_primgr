@@ -1,0 +1,41 @@
+# Global configuration
+global
+        log 127.0.0.1 local2
+        user haproxy
+        group haproxy
+
+# Defaults configuration
+defaults
+        log global
+        retries 3
+        timeout connect 86400
+        timeout server  10800s
+        timeout client 10800s
+
+
+listen stats
+        mode http
+        bind *:80808
+        stats enable
+        stats auth guesswho:itsame,mario!
+        stats uri /
+
+listen Primary
+        bind *:5432
+        option httpchk GET /state
+        http-check expect status 200
+        default-server inter 20s fall 3 rise 2 on-marked-down shutdown-sessions
+
+{% for server in database_servers | sort   %}
+        server {{ server }} {{ server }}:5432 check port 5999
+{% endfor %}
+
+listen Slave
+        bind *:15432
+        option httpchk GET /state
+        http-check expect status 202
+        default-server inter 20s fall 3 rise 2
+        balance leastconn
+{% for server in database_servers %}
+        server {{ server }} {{ server }}:5432 check port 5999
+{% endfor %}

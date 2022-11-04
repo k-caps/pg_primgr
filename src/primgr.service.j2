@@ -1,0 +1,15 @@
+[Unit]
+Description=API Exposing PG cluster state
+
+[Service]
+User=postgres
+LimitNOFILE=4096
+WorkingDirectory=/opt/primgr
+ExecStart=/var/lib/pgsql/.local/bin/uvicorn main:app --reload --port 5999 --host 0.0.0.0
+Type=simple
+Restart=always
+StartLimitInterval=5
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target
