@@ -1,0 +1,95 @@
+---
+- name: "Install python3"
+  yum:
+    name:
+      - "python3"
+    state: present
+
+- name: "Prepare primgr directory in /opt"
+  become: yes
+  become_user: root
+  file:
+    state: directory
+    path: /opt/primgr
+    owner: postgres
+    group: postgres
+    mode: 0744
+
+- name: "Prepare primgr directory in /var/log"
+  become: yes
+  become_user: root
+  file:
+    state: directory
+    path: /var/log/primgr
+    owner: postgres
+    group: postgres
+    mode: 0744
+
+- name: Update pip using shell
+  shell: python3 -m pip install --user --upgrade pip
+  become: yes
+  become_user: postgres
+
+- name: "Prepare primgr requirements.txt"
+  become: yes
+  become_user: root
+  template:
+    src: requirements.txt
+    dest: /opt/primgr/requirements.txt
+    owner: postgres
+    group: postgres
+    mode: 0644
+
+- name: Install dependencies using pip
+  become: yes
+  become_user: postgres
+  pip:
+    requirements: /opt/primgr/requirements.txt
+    extra_args: "--user"
+    executable: /bin/pip3
+
+- name: "Add uvicorn executable location to path"
+  become: yes
+  become_user: root
+  blockinfile:
+    path: /var/lib/pgsql/.bash_profile
+    insertafter: EOF
+    block: |
+      PATH=$PATH:/var/lib/pgsql/.local/bin
+      export PATH
+
+- name: "Add primgr main source code file"
+  become: yes
+  become_user: root
+  template:
+    src: primgr.py
+    dest: /opt/primgr/main.py
+    owner: postgres
+    group: postgres
+    mode: 0644
+
+- name: "Add primgr repmgr node module source code file"
+  become: yes
+  become_user: root
+  template:
+    src: repmgr_node.py
+    dest: /opt/primgr/repmgr_node.py
+    owner: postgres
+    group: postgres
+    mode: 0644
+
+- name: "Add primgr systemd service"
+  become: yes
+  become_user: root
+  template:
+    src: primgr.service.j2
+    dest: /etc/systemd/system/multi-user.target.wants/primgr.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Start primgr webserver"
+  systemd:
+    name: primgr
+    state: restarted
+    daemon_reload: yes

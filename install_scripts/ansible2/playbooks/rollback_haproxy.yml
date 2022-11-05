@@ -1,0 +1,15 @@
+---
+- hosts: haproxy
+  become: yes
+  become_user: root
+  tasks:
+    - name: "restore haproxy conf from backup"
+      copy:
+        remote_src: yes
+        src: /etc/haproxy/haproxy.cfg_no_primgr
+        dest: /etc/haproxy/haproxy.cfg
+
+     - name: "Restart haproxy"
+       service:
+          name: haproxy
+          state: restarted

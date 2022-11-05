@@ -1,0 +1,64 @@
+---
+- hosts: haproxy:databases
+  strategy: free
+  gather_facts: false
+  tasks:
+    - setup:
+        gather_subset:
+          - 'network'
+    - set_fact:
+        haproxy_conf_file: "/etc/haproxy/haproxy.cfg"
+
+####################################################
+#          INSTALL primgr ON DATABASE SERVERS     #
+####################################################
+- hosts: databases
+  become: yes
+  become_user: root
+  roles:
+    - { role: primgr, action: "configure_fastapi" }
+
+  pre_tasks:
+    - name: "Get pg_version"
+      shell: "ls /usr/ | grep pgsql | awk -F '-' '{print$2}' | sort -n | tail -n 1"
+      register: chk_pg_version
+
+    ## Don't do this if you need a notification command to fix barman
+    #- name: "remove event notification script call from repmgr"
+    #  lineinfile:
+    #    path: "/etc/repmgr/{{ pg_version }}/repmgr.conf"
+    #    regexp: '^event_notification_command'
+    #    state: absent
+  vars: 
+    - pg_version: "{{ chk_pg_version.stdout }}"
+    - count: "{{ groups['databases'] | length }}"
+
+##############################################
+#          CHANGE HAPROXY CONFIGURATION
+##############################################
+- hosts: haproxy
+  become: yes
+  become_user: root
+  tasks:
+    - name: "Backup haproxy conf file"
+      copy:
+        remote_src: yes
+        src: "{{ haproxy_conf_file }}"
+        dest: "{{ haproxy_conf_file }}_backup"
+ 
+    - name: "Add haproxy configuration template"
+      template:
+        src: haproxy.cfg.j2
+        dest: "{{ haproxy_conf_file }}"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: "Fix permission to haproxy in selinux"
+      shell: "setsebool -P haproxy_connect_any 1"
+
+    - name: "Enable haproxy service run on startup"
+      service:
+        name: haproxy
+        enabled: yes
+        state: restarted

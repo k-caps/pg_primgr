@@ -1,0 +1,31 @@
+---
+- hosts: nonp-*-databases
+  tasks:
+    - name: "Get PG version"
+      become: yes
+      become_user: postgres
+      ignore_errors: yes
+      shell: >
+        systemctl |
+        grep postgresql-  |
+        cut -d "-" -f 2 |
+        awk '{print $1}' |
+        rev |
+        cut -d'.' -f2,3 |
+        rev
+      args:
+       executable: /bin/bash
+      register: pg_version
+
+    - name: "Check not part of cluster:"
+      stat:
+        path: "/etc/repmgr/{{pg_version.stdout}}/repmgr.conf"
+      register: repmgr_conf_file
+
+    - name: "Change to enabled on single instances"
+      become: yes
+      become_user: root
+      service:
+        name: "postgresql-{{pg_version.stdout}}"
+        enabled: yes
+      when: not repmgr_conf_file.stat.exists
