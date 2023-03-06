@@ -1,0 +1,38 @@
+[Unit]
+Description=A replication manager, and failover management tool for PostgreSQL
+StartLimitInterval=200
+StartLimitBurst=5
+After=syslog.target
+After=network.target
+After={{ pg_service }}.service
+
+[Service]
+Type=forking
+Restart=always
+RestartSec=5
+
+User=postgres
+Group=postgres
+
+# PID file for systemd use
+PIDFile=/var/run/repmgr/repmgrd-{{ pg_version }}.pid
+
+# Location of repmgr conf file:
+Environment=REPMGRDCONF=/etc/repmgr/{{ pg_version }}/repmgr.conf
+
+# PID file for repmgrd cli invocation below
+Environment=PIDFILE=/var/run/repmgr/repmgrd-{{ pg_version }}.pid
+
+# Where to send early-startup messages from the server
+# This is normally controlled by the global default set by systemd
+# StandardOutput=syslog
+ExecStart=/usr/pgsql-{{ pg_version }}/bin/repmgrd -f ${REPMGRDCONF} -p ${PIDFILE} -d --verbose
+ExecStartPost=/bin/sh -c '{{ pg_autostart_script_dir }}{{ pg_autostart_script }} &> {{ pg_autostart_script_log_file }}'
+ExecStop=/usr/bin/kill -TERM $MAINPID
+ExecReload=/usr/bin/kill -HUP $MAINPID
+
+# Give a reasonable amount of time for the server to start up/shut down
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target
