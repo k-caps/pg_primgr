@@ -17,18 +17,18 @@ The API is based on the following logic flow, the code "asking" and then acting 
 
 Requirements:
 -------------
-See the requirements section in `/docs/primgr_api.md`
+See the requirements section in the [API documentation](docs/primgr_api.md).
 
 Installation
 ------------
-You can use the RPMs from the releases page, or adapt and run any of the methods provided in the `install_scripts` directory, or manually.
+You can use the RPMs from the releases page, or adapt and run any of the methods provided in the `install_scripts` directory, or manually, by placing the files in thier respective locations..
 
 ### RPM installation
 Download the RPM files you want to use and install them on the relevant machines - `primgr.rpm` and `primgr-pg-enable.rpm` should be installed on all Postgres nodes, and `primgr-haproxy.rpm` on all haproxy node.
 
-`primgr.rpm` installs only the core API on the assumption that you know how you want to use it.  
-`primgr-pg-enable.rpm` changes the systemctl script for Postgres, enabling it and adding a bash script that checks the cluster at node startup. If a node is running as primary, but is not recognized as a primary, it will determine the current acting primary and attach itself as a standby automatically. This is of course only useful in case of the node or service actually going dow, and cannot automatically heal network splits. This is planned for future releases.  
-`primgr-haproxy.rpm` configures an `haproxy.cfg` to automatically send new connections to the actual primary only. You will need to add your own hostnames to `haproxy.cfg` after it has been installed.  
+**`primgr.rpm`** installs only the core API on the assumption that you know how you want to use it.  
+**`primgr-pg-enable.rpm`** changes the systemctl script for Postgres, enabling it and adding a bash script that checks the cluster at node startup. If a node is running as primary, but is not recognized as a primary, it will determine the current acting primary and attach itself as a standby automatically. This is of course only useful in case of the node or service actually going down, and cannot automatically heal network splits. This is planned for future releases.  
+**`primgr-haproxy.rpm`** configures an `haproxy.cfg` to automatically send new connections to the actual primary only. You will need to add your own hostnames to `haproxy.cfg` after it has been installed.  
 
 
 ### Script installation
