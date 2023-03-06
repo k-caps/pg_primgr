@@ -63,7 +63,8 @@ Important information
 
 * In my environments, all DB nodes are numbered by DNS. For example db-node-1.com, db-node-2.com. So, the `pg_autostart.sh` included here use builds a list of nodes accordingly.
 
-### Self healing
+Self healing
+------------
 It is possible to use primgr to facilitate self healing to a certain degree by enabling the postgres and repmgr services.
 When the repmgr service starts, it can run a script which checks primgr, and if the primary reported by primgr is different than the node which failed (localhost), we assume a failover ocurred. Then, the script can perform a `node rejoin` or `standby clone` from the new primary, using information received from primgr.
 In the `src/autostart` directory, you can find an example of a bash script which does this, and a repmgr service file which uses the bash script.
