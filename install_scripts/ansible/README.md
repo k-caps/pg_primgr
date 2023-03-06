@@ -16,4 +16,4 @@ roles/
 
 Requirements
 ------------
-ansible > 2.7
+ansible >= 2.7
