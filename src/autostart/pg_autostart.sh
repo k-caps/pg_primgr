@@ -2,15 +2,17 @@
 
 lockfile=/var/run/postgresql/.pg_enable.lock
 log=/var/log/pgsql/autostart_errors.log
-primgr_port={{ pg_primgr_port }}
-pg_version={{ pg_version }}
+primgr_port=5999
+pg_version=12
 start_number_of_servers=1
 end_number_of_servers=3
+PGDATA=/var/lib/pgsql/$pg_version/data
+CONF_FILES=("$PGDATA/postgresql.conf" "$PGDATA/pg_hba.conf" "$PGDATA/server.crt" "$PGDATA/server.key")
 fdate() { date "+%d-%m-%Y %H:%M:%S" "$@"; }
-printf "$(fdate) - [INFO] - Enable script started.\n" >> $log
+printf "$(fdate) - [INFO] - PG Autostart script started.\n" >> $log
 
 # Copies all files to /tmp in order to prevent files transfered empty
-cp -f --copy-contents /var/lib/pgsql/$pg_version/data/{postgresql.conf,pg_hba.conf,server.crt,server.key} /tmp/
+cp -f --copy-contents $CONF_FILES /tmp/
 chmod 400 /tmp/server.key
 
 if [[ -e $lockfile ]]; then
