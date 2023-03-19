@@ -28,6 +28,23 @@ def create_node_instance():
     repmgr_node = Repmgr_Node()
 
 
+@app.get("/realPrimary")
+def get_reported_real_primary(response: response):
+    try:
+        real_primary = repmgr_node.get_real_primary()
+        return {"realPrimary": real_primary}
+
+    except OperationalError:
+        logging.warning("/primary was unable to connect to local DB, reporting \"down\".")
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"State": "Down"}
+
+    except Exception as ex:
+        logging.error(ex)
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"State": "Unknown"}        
+    
+
 @app.get("/primary")
 def get_reported_primary(response: Response):
     try:

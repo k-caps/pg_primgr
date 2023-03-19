@@ -3,6 +3,7 @@ Endpoints
 The endpoints which are exposed via FastAPI are:  
 `/primary`, which returns a single string containing a hostname, which is what that node thinks is the current primary.  
 This is used so that each node only needs to connect to its own local DB and does not have to connect to other PostgreSQL instances.  
+`/realPrimary`, which checks the `/state` endpoint on all nodes, and returns the one node in the cluster which returns state: primary - the actual primary.  
 `/state`, which checks the questions asked above, and returns the answer as a JSON, with the key "state" and a value, which can be any of the following:    
 
 `Down` -  when the local DB is unavailable  
@@ -45,7 +46,7 @@ There are two code files, `primgr.py` and `repmgr_node.py`.
 - **get_reported_primary():**
   - **Description**: Gets the node which a given node thinks is the primary
   - **Parameters:** `response` (FastAPI object)
-  - **Returns:** JSON, containig the key "Primary" and the value <node name>
+  - **Returns:** JSON, containing the key "Primary" and the value <node name>
   - **Is used by:** FastAPI endpoint `/primary`
   - **Located in file:** `primgr.py`
   <br>  
@@ -53,7 +54,7 @@ There are two code files, `primgr.py` and `repmgr_node.py`.
 - **get_primary():**
   - **Description**: Gets the node which a given node thinks is the primary
   - **Parameters:** `response` (FastAPI object)
-  - **Returns:** JSON, containig the key "Primary" and the value <node name>
+  - **Returns:** JSON, containing the key "Primary" and the value <node name>
   - **Is used by:** `get_reported_primary()`
   - **Located in file:** `repmgr_node.py`
 
@@ -122,6 +123,39 @@ There are two code files, `primgr.py` and `repmgr_node.py`.
   - **Is used by:** `get_state()`
   - **Located in file:** `repmgr_node.py`
   <br>
+
+  - **get_reported_real_primary():**
+  - **Description**: Gets the node which most of the cluster thinks is the primary
+  - **Parameters:** `response` (FastAPI object)
+  - **Returns:** JSON, containing the key "realPrimary" and the value <node name>
+  - **Is used by:** FastAPI endpoint `/realPrimary`
+  - **Located in file:** `pegasus.py`
+  <br>  
+
+- **get_real_primary():**
+  - **Description**: Returns the current primary node of the cluster
+  - **Parameters:** none
+  - **Returns:** string
+  - **Is used by:** FastAPI endpoint `/realPrimary`
+  - **Located in file:** `repmgr_node.py`
+  <br>
+
+- **get_all_nodes():**
+  - **Description**: Returns a list of all nodes in the cluster
+  - **Parameters:** `db_connection`
+  - **Returns:** list, containing names of nodes
+  - **Is used by:** `get_real_primary()`
+  - **Located in file:** `repmgr_node.py`
+  <br>
+
+- **http_node_reports_state():**
+  - **Description**:  Check a given node via http at endpoint `/state` and returns the node state
+  - **Parameters:** `db_connection`
+  - **Returns:** list, containing names of nodes
+  - **Is used by:** `gett_real_primary()`
+  - **Located in file:** `repmgr_node.py`
+  <br>
+
 
 
 Caching and connection pool
