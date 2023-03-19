@@ -1,4 +1,4 @@
-**primgr**
+**The Postgres Primary Manager - primgr - **
 =========
 primgr is a service which acts as an extension to repmgr, exposing a port which returns the current state of each node in the cluster.  
 This allows any load balancer to dynamically route traffic to the current DB primary, as well as other potential applications such as self healing. For more information, see the [self healing section](#self-healing).  
