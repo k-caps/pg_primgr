@@ -54,6 +54,25 @@ class Repmgr_Node:
         finally:
             logging.debug("Ending /primary execution")
 
+    #######################################################################################
+    #!>                             /realPrimary ENDPOINT FUNCTION                            <!#
+    #######################################################################################
+    def get_real_primary(self) -> str:
+        logging.debug("Starting /realPrimary execution")
+        try:
+            with self.local_con_pool.connect() as conn:
+                nodes_to_poll = self.get_all_nodes(conn)
+                for node in nodes_to_poll:
+                    if self.http_node_reports_state(node[0].replace('_', '-')) == "Primary":
+                        return node[0].replace('_','-')
+                        
+        except Exception as ex:
+            raise (ex)
+
+        finally:
+            logging.debug("Ending /realPrimary execution")
+      
+    
 
     #######################################################################################
     #!>                             /state ENDPOINT FUNCTION                            <!#
@@ -91,7 +110,7 @@ class Repmgr_Node:
 
 
     #######################################################################################
-    #!>                             FUNCTIONS USED BY /state                            <!#
+    #!>                    FUNCTIONS USED BY /state and /realPrimary                    <!#
     #######################################################################################
     def get_is_in_recovery_mode(self, db_connection) -> bool:
         res = db_connection.execute(text(
@@ -115,6 +134,13 @@ class Repmgr_Node:
         return site_nodes
 
 
+    def get_all_nodes(self, db_connection) -> list:
+        res = db_connection.execute(text(
+            f"SELECT node_name::varchar from repmgr.nodes"))
+        all_cluster_nodes_nodes = res.fetchall()
+        return all_cluster_nodes
+        
+
     def poll_other_nodes(self, nodes_to_poll: list, candidate_node: str, num_in_consensus: int) -> int:
         logging.debug("Asking other nodes:")
         logging.debug(
@@ -134,10 +160,17 @@ class Repmgr_Node:
     def http_node_reports_primary(self, node_to_check: str) -> str:
         reported_primary = requests.get(f"http://{node_to_check}:{CHECK_PORT}/primary", timeout=3)
         if reported_primary.status_code != 200:
-            raise requests.ConnectionError("Unable to connect to remote health check port.")
+            raise requests.ConnectionError("Unable to connect to remote primgr port.")
         return reported_primary.json()['Primary']
 
 
+    def http_node_reports_state(self, node_to_check: str) -> str:
+        reported_state = requests.get(f"http://{node_to_check}:{CHECK_PORT}/state", timeout=3)
+        if state.status_code != 200:
+            raise requests.ConnectionError("Unable to connect to remote pegasus port.")
+        return reported_state.json()['State']
+        
+        
     '''
     Check that the number of nodes who think I am the primary is the majority of the cluster - at least 2 out of 3 (since we only poll the primary site)
     "(primary_site_node_count/2)+1" evaluates to "more than %50 of nodes (including this one)"
